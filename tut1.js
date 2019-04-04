@@ -32,7 +32,52 @@ const run = async () => {
         }
     );
 
-    // More code will be added below
+    const model = createModel();
+    tfvis.show.modelSummary({name: 'Model Summary'}, model);
 };
 
+const createModel = () => {
+    //Create a sequential model
+    const model = tf.sequential();
+
+    //Add a single hidden layer
+    model.add(tf.layers.dense({inputShape: [1], units: 1, useBias: true}));
+
+    // Add an output layer
+    model.add(tf.layers.dense({units: 1, useBias: true}));
+    return model;
+};
+
+const convertToTensor = (data) => {
+    return tf.tidy(() => {
+        //step 1 suffle the data
+        tf.util.shuffle(data);
+
+        //step 2  convert data to tensor
+        const inputs = data.map(d => d.horsepower);
+        const labels = data.map(d => d.mpg);
+
+        const inputTensor = tf.tensor2d(inputs, [inputs.length, 1]);
+        const labelTensor = tf.tensor2d(labels, [labels.length, 1]);
+
+        //step 3 normalize the data to be between 0 and 1
+        const inputMax = inputTensor.max();
+        const inputMin = inputTensor.min();
+        const labelMax = labelTensor.max();
+        const labelMin = labelTensor.min();
+
+        const normalizedInputs = inputTensor.sub(inputMin).div(inputMax.sub(inputMin));
+        const normalizedLabels = labelTensor.sub(labelMin).div(labelMax.sub(labelMin));
+
+        return {
+            inputs: normalizedInputs,
+            labels: normalizedLabels,
+            //return minmax bounds for later
+            inputMax,
+            inputMin,
+            labelMax,
+            labelMin
+        }
+    });
+};
 document.addEventListener('DOMContentLoaded', run);
