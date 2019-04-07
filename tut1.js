@@ -48,10 +48,14 @@ const createModel = () => {
     const model = tf.sequential();
 
     //Add a single hidden layer
-    model.add(tf.layers.dense({inputShape: [1], units: 1, useBias: true}));
+    model.add(tf.layers.dense({inputShape: [1], units: 50, useBias: true}));
+    //Add an activation function
+    model.add(tf.layers.dense({units: 50, activation: 'relu'}));
 
     // Add an output layer
     model.add(tf.layers.dense({units: 1, useBias: true}));
+
+
     return model;
 };
 
@@ -97,7 +101,7 @@ const trainModel = async (model, inputs, labels) => {
     });
 
     const batchSize = 28;
-    const epochs = 50;
+    const epochs = 100;
 
     return await model.fit(inputs, labels, {
         batchSize,
