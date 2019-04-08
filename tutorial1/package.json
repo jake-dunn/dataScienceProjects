@@ -1,0 +1,28 @@
+{
+  "name": "datascienceprojects",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tut1.js",
+  "dependencies": {
+    "@tensorflow/tfjs": "^1.0.3",
+    "@tensorflow/tfjs-vis": "^1.0.3",
+    "async": "^2.6.2",
+    "core-js": "^3.0.0",
+    "npm": "^6.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify tut1.js -o tut1bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdunn28/dataScienceProjects.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jdunn28/dataScienceProjects/issues"
+  },
+  "homepage": "https://github.com/jdunn28/dataScienceProjects#readme"
+}
