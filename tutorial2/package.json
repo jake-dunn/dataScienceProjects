@@ -10,7 +10,9 @@
     "core-js": "^3.0.0",
     "npm": "^6.9.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "browserify tut2.js -o tut2bundle.js"
