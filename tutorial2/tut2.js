@@ -12,8 +12,8 @@ let getModel = () => {
     // we specify some parameters for the convolution operation
     //todo explain the parameters
     //filters: multiplication by a matrix this specifies the output space
-    //kernal size is a 5x5 matrix for multiplication
-    //strides: filter moves 1 pixel by 1 pixel
+    //kernel size is a 5x5 matrix for multiplication
+    //strides: filter moves x pixel by x pixel
     //one could pad the image to prevent the image shrinking might want to add this later
     model.add(tf.layers.conv2d({
             inputShape: [IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS],
@@ -37,6 +37,7 @@ let getModel = () => {
         activation: 'relu',
         kernelInitializer: 'varianceScaling'
     }));
+
     //more pooling
     model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 
@@ -94,11 +95,13 @@ let train = async (model, data) => {
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 10,
+        epochs: 30,
         shuffle: true,
         callbacks: fitCallbacks
     });
-}
+};
+
+
 
 let showExamples = async (data) => {
     // Create a container in the visor
@@ -131,11 +134,11 @@ let showExamples = async (data) => {
 
 const classNames = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-let doPredicition = (model, data, testDataSize = 500) => {
+let doPredication = (model, data, testDataSize = 500) => {
     const IMAGE_WIDTH = 28;
     const IMAGE_HEIGHT = 28;
     const testData = data.nextTestBatch(testDataSize);
-    const testxs = testData.xs.reshape([testDataSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1])
+    const testxs = testData.xs.reshape([testDataSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
     const labels = testData.labels.argMax([-1]);
     const preds = model.predict(testxs).argMax([-1]);
 
@@ -143,24 +146,60 @@ let doPredicition = (model, data, testDataSize = 500) => {
     return [preds, labels];
 };
 
+const classifyPoint = async (model, point) => {
+    const IMAGE_WIDTH = 28;
+    const IMAGE_HEIGHT = 28;
+    const pointxs = point.reshape([1, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
+    const pred = model.predict(pointxs, {batchSize: 1}).argMax([-1]);
+    const predVal = await pred.data();
+    return predVal[0]
+};
+
+const getSingleDataPoint = (data) => {
+    let point = data.nextTestBatch(1);
+    return tf.tidy(() => {
+        return point.xs
+            .slice([0, 0], [1, point.xs.shape[1]])
+            .reshape([28, 28, 1]);
+    });
+};
+
+const displaySingleNumber = async (imageTensor, prediction) => {
+    //Create a container in the visor
+    const surface =
+        tfvis.visor().surface({name: `Predicted value is ${prediction}`, tab: 'Data'});
+
+    //display point
+    const canvas = document.createElement('canvas');
+    canvas.width = 28;
+    canvas.height = 28;
+    canvas.style = 'margin: 4px;';
+    await tf.browser.toPixels(imageTensor, canvas);
+    surface.drawArea.appendChild(canvas);
+
+    imageTensor.dispose();
+
+};
+
 let showAccuracy = async (model, data) => {
-    const [preds, labels] = doPredicition(model, data);
+    const [preds, labels] = doPredication(model, data);
     const classAccuracy = await tfvis.metrics.perClassAccuracy(labels, preds);
     const container = {name: 'Accuracy', tab: 'Evaluation'};
-    tfvis.show.perClassAccuracy(container, classAccuracy, classNames)
+    tfvis.show.perClassAccuracy(container, classAccuracy, classNames);
 
     labels.dispose();
 };
 
 let showConfusion = async (model, data) => {
-    const [preds, labels] = doPredicition(model, data);
+    const [preds, labels] = doPredication(model, data);
     const confusionMatrix = await tfvis.metrics.confusionMatrix(labels, preds);
     const container = {name: 'Confusion Matrix', tab: 'evaluation'};
     tfvis.render.confusionMatrix(
         container, {values: confusionMatrix}, classNames
     );
     labels.dispose();
-}
+};
+
 
 let run = async () => {
     const data = new MnistData();
@@ -171,6 +210,9 @@ let run = async () => {
     await train(model, data);
     await showAccuracy(model, data);
     await showConfusion(model, data);
-}
+    const pointToPredict = getSingleDataPoint(data);
+    const prediction = await classifyPoint(model, pointToPredict);
+    await displaySingleNumber(pointToPredict, prediction);
+};
 
 document.addEventListener('DOMContentLoaded', run);
