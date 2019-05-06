@@ -10,8 +10,7 @@ let getModel = () => {
     //first layer of the convolutional neural network
     //we need to specify the input shape
     // we specify some parameters for the convolution operation
-    //todo explain the parameters
-    //filters: multiplication by a matrix this specifies the output space
+    //filters: these are what we are tying to learn. We effective convolve the image on a grid by grid basis with these until we 'see' the image we are looking for.
     //kernel size is a 5x5 matrix for multiplication
     //strides: filter moves x pixel by x pixel
     //one could pad the image to prevent the image shrinking might want to add this later
@@ -26,7 +25,7 @@ let getModel = () => {
     );
 
     //This is a max pooling layer, it is a form of downsampling using the max
-    //values in each window
+    //values in each window, this is to give a sort or hierarchical to the network and to reduce the space for performance
     model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 
     //more convolution
@@ -45,7 +44,7 @@ let getModel = () => {
     //now we flatten to a 1D vector  to prepare for the last layer which has 10 outputs
     model.add(tf.layers.flatten());
 
-    //Our last layer in now a dense layer with 10 output units (one for each number)
+    //Our last layer in now a dense layer (standard neural network) with 10 output units (one for each number)
     const NUM_OUTPUT_CLASSES = 10;
     model.add(tf.layers.dense({
         units: NUM_OUTPUT_CLASSES,
@@ -53,7 +52,7 @@ let getModel = () => {
         activation: 'softmax'
     }));
 
-    //optimizer
+    //optimizer we use adam which is a variation on gradient descent designed to reduce oscillation in the steps
     const optimizer = tf.train.adam();
     model.compile({
         optimizer: optimizer,
@@ -155,6 +154,8 @@ const classifyPoint = async (model, point) => {
     return predVal[0]
 };
 
+
+//this is to grab a random example from the data set, return its label and its prediction, the idea is to get a feel for how well the neural net does on a single example
 const getSingleDataPoint = (data) => {
     let point = data.nextTestBatch(1);
     return tf.tidy(() => {
