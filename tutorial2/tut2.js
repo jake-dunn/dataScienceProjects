@@ -192,6 +192,7 @@ let showAccuracy = async (model, data) => {
 };
 
 let showConfusion = async (model, data) => {
+    //this shows a confusion matrix allowing us to see where the model is having classification issues
     const [preds, labels] = doPredication(model, data);
     const confusionMatrix = await tfvis.metrics.confusionMatrix(labels, preds);
     const container = {name: 'Confusion Matrix', tab: 'evaluation'};
